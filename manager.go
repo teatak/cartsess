@@ -9,9 +9,9 @@ import (
 var firstKey string = ""
 
 const (
-	prefixKey  = "github.com/gimke/cartsess:"
-	errorFormat = "[sessions] ERROR! %s\n"
-	infoFormat = "[sessions] INFO! %s\n"
+	prefixKey  	= "github.com/gimke/cartsess:"
+	errorFormat = "[CART-SESS] ERROR! %s\n"
+	infoFormat 	= "[CART-SESS] INFO %s\n"
 )
 
 // NewSession is called by session stores to create a new session instance.
