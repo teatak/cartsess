@@ -16,6 +16,7 @@ type MemoryStore struct {
 	value        	map[string]interface{} //session store
 	gc        		map[string]int64 //session gc time store
 	SessionIDLength	int
+	GCTime			time.Duration
 }
 
 var _ Store = &MemoryStore{}
@@ -31,6 +32,7 @@ func NewMemoryStore() *MemoryStore {
 			MaxAge: 86400 * 30,
 		},
 		SessionIDLength: 	64,
+		GCTime:				60,
 		value: 				make(map[string]interface{}),
 		gc: 				make(map[string]int64),
 	}
@@ -136,7 +138,7 @@ func (s *MemoryStore) GC() {
 	s.mutex.Unlock()
 
 	select {
-		case <- time.After(time.Second * 60):
+		case <- time.After(time.Second * s.GCTime):
 		go s.GC()
 	}
 }
