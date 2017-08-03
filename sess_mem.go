@@ -1,31 +1,26 @@
 package cartsess
 
 import (
-	"crypto/rand"
 	"net/http"
-	"sync"
-	"fmt"
-	"encoding/hex"
+	"math/rand"
 )
 
 type MemoryStore struct {
-	Options *Options // default configuration
-	sid          string                      //session id
-	value        map[interface{}]map[interface{}]interface{} //session store
-	lock         sync.RWMutex
+	Options 		*Options // default configuration
+	value        	map[interface{}]interface{} //session store
 	SessionIDLength	int
 }
 
 var _ Store = &MemoryStore{}
 
-func NewMemoryStore(keyPairs ...[]byte) *MemoryStore {
+func NewMemoryStore() *MemoryStore {
 	ms := &MemoryStore{
 		Options: &Options{
 			Path:   "/",
 			MaxAge: 86400 * 30,
 		},
-		SessionIDLength: 16,
-		value: make(map[interface{}]map[interface{}]interface{}),
+		SessionIDLength: 64,
+		value: make(map[interface{}]interface{}),
 	}
 	return ms
 }
@@ -47,10 +42,10 @@ func (s *MemoryStore) New(r *http.Request, cookieName string) (*Session, error) 
 		session.ID = sid.Value
 		//get value
 		if s.value[sid.Value] != nil {
-			session.Values = s.value[sid.Value]
+			session.Values = s.value[sid.Value].(map[interface{}]interface{})
 		}
 	} else {
-		newid,err := s.generateID()
+		newid := s.generateID()
 		session.ID = newid
 		if err == nil {
 			session.IsNew = true
@@ -62,13 +57,7 @@ func (s *MemoryStore) New(r *http.Request, cookieName string) (*Session, error) 
 // Save adds a single session to the response.
 func (s *MemoryStore) Save(r *http.Request, w http.ResponseWriter,
 	session *Session) error {
-	//encoded, err := securecookie.EncodeMulti(session.CookieName(), session.Values,
-	//	s.Codecs...)
-	//if err != nil {
-	//	return err
-	//}
 	sid := session.ID
-	fmt.Println(session)
 	first := false
 	if s.value[sid] == nil {
 		first = true
@@ -84,11 +73,13 @@ func (s *MemoryStore) Save(r *http.Request, w http.ResponseWriter,
 }
 
 
-func (s *MemoryStore) generateID() (string, error) {
-	b := make([]byte, s.SessionIDLength)
-	n, err := rand.Read(b)
-	if n != len(b) || err != nil {
-		return "", fmt.Errorf("Could not successfully read from the system CSPRNG")
+var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-")
+
+func (s *MemoryStore) generateID() string {
+	b := make([]rune, s.SessionIDLength)
+	for i := range b {
+		b[i] = letterRunes[rand.Intn(len(letterRunes))]
 	}
-	return hex.EncodeToString(b), nil
+	return string(b)
+
 }
