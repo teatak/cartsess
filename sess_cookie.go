@@ -48,14 +48,20 @@ func (s *CookieStore) New(r *http.Request, cookieName string) (*Session, error) 
 }
 
 // Save adds a single session to the response.
-func (s *CookieStore) Save(r *http.Request, w http.ResponseWriter,
-	session *Session) error {
+func (s *CookieStore) Save(r *http.Request, w http.ResponseWriter, session *Session) error {
 	encoded, err := EncodeMulti(session.CookieName(), session.Values,
 		s.Codecs...)
 	if err != nil {
 		return err
 	}
 	http.SetCookie(w, NewCookie(session.CookieName(), encoded, session.Options))
+	return nil
+}
+
+func (s *CookieStore) Destroy(r *http.Request, w http.ResponseWriter, session *Session) error {
+	opt := session.Options
+	opt.MaxAge = -1
+	http.SetCookie(w, NewCookie(session.CookieName(), "", opt))
 	return nil
 }
 

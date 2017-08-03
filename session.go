@@ -18,6 +18,11 @@ func (s *Session) Save(r *http.Request, w http.ResponseWriter) error {
 	return s.store.Save(r, w, s)
 }
 
+func (s *Session) Destroy(r *http.Request, w http.ResponseWriter) error {
+	return s.store.Destroy(r, w, s)
+}
+
+
 func NewSession(store Store, cookieName string) *Session {
 	return &Session{
 		Values: make(map[interface{}]interface{}),

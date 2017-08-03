@@ -17,6 +17,7 @@ type Store interface {
 	Get(r *http.Request, name string) (*Session, error)
 	New(r *http.Request, name string) (*Session, error)
 	Save(r *http.Request, w http.ResponseWriter, s *Session) error
+	Destroy(r *http.Request, w http.ResponseWriter, s *Session) error
 }
 
 

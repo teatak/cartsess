@@ -67,6 +67,13 @@ func (s *SessionManager) Delete(key interface{}) {
 	s.Save()
 }
 
+func (s *SessionManager) Destroy() {
+	for key := range s.Session().Values {
+		s.Delete(key)
+	}
+	s.written = true
+	s.Session().Destroy(s.request, s.response)
+}
 func (s *SessionManager) Session() *Session {
 	if s.session == nil {
 		var err error

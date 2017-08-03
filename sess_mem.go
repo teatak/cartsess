@@ -8,10 +8,15 @@ import (
 type MemoryStore struct {
 	Options 		*Options // default configuration
 	value        	map[interface{}]interface{} //session store
+	gc        		map[interface{}]interface{} //session store
 	SessionIDLength	int
 }
 
 var _ Store = &MemoryStore{}
+
+func (s *MemoryStore) GC() {
+
+}
 
 func NewMemoryStore() *MemoryStore {
 	ms := &MemoryStore{
@@ -22,6 +27,7 @@ func NewMemoryStore() *MemoryStore {
 		SessionIDLength: 64,
 		value: make(map[interface{}]interface{}),
 	}
+	ms.GC()
 	return ms
 }
 
@@ -69,6 +75,16 @@ func (s *MemoryStore) Save(r *http.Request, w http.ResponseWriter,
 	if first {
 		http.SetCookie(w, NewCookie(session.CookieName(), session.ID, session.Options))
 	}
+	return nil
+}
+
+func (s *MemoryStore) Destroy(r *http.Request, w http.ResponseWriter, session *Session) error {
+	sid := session.ID
+	delete(s.value,sid)
+	delete(s.gc,sid)
+	opt := session.Options
+	opt.MaxAge = -1
+	http.SetCookie(w, NewCookie(session.CookieName(), "", opt))
 	return nil
 }
 
