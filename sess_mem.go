@@ -28,7 +28,7 @@ func NewMemoryStore() *MemoryStore {
 	s := &MemoryStore{
 		Options: &Options{
 			Path:   "/",
-			MaxAge: 30,
+			MaxAge: 86400 * 30,
 		},
 		SessionIDLength: 	64,
 		value: 				make(map[string]interface{}),
