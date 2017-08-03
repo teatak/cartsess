@@ -134,6 +134,9 @@ func (s *MemoryStore) GC() {
 	}
 	if count > 0 {
 		log.Printf(infoFormat,"MemoryStore GC count:"+strconv.Itoa(count))
+	} else {
+		log.Printf(infoFormat,"MemoryStore GC do nothin")
+
 	}
 	s.mutex.Unlock()
 
