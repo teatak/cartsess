@@ -52,17 +52,17 @@ type SessionManager struct {
 }
 
 func (s *SessionManager) Get(key interface{}) interface{} {
-	return s.Session().values[key]
+	return s.Session().Values[key]
 }
 
 func (s *SessionManager) Set(key interface{}, val interface{}) {
-	s.Session().values[key] = val
+	s.Session().Values[key] = val
 	s.written = true
 	s.Save()
 }
 
 func (s *SessionManager) Delete(key interface{}) {
-	delete(s.Session().values, key)
+	delete(s.Session().Values, key)
 	s.written = true
 	s.Save()
 }

@@ -1,27 +1,32 @@
 package cartsess
 
 import (
-	"github.com/gorilla/securecookie"
+	"crypto/rand"
 	"net/http"
+	"sync"
+	"fmt"
+	"encoding/hex"
 )
 
 type MemoryStore struct {
-	Codecs  []securecookie.Codec
 	Options *Options // default configuration
+	sid          string                      //session id
+	value        map[interface{}]map[interface{}]interface{} //session store
+	lock         sync.RWMutex
+	SessionIDLength	int
 }
 
 var _ Store = &MemoryStore{}
 
 func NewMemoryStore(keyPairs ...[]byte) *MemoryStore {
 	ms := &MemoryStore{
-		Codecs: securecookie.CodecsFromPairs(keyPairs...),
 		Options: &Options{
 			Path:   "/",
 			MaxAge: 86400 * 30,
 		},
+		SessionIDLength: 16,
+		value: make(map[interface{}]map[interface{}]interface{}),
 	}
-
-	ms.MaxAge(ms.Options.MaxAge)
 	return ms
 }
 
@@ -32,17 +37,23 @@ func (s *MemoryStore) Get(r *http.Request, cookieName string) (session *Session,
 	return
 }
 
-func (s *MemoryStore) New(r *http.Request, name string) (*Session, error) {
-	session := NewSession(s, name)
+func (s *MemoryStore) New(r *http.Request, cookieName string) (*Session, error) {
+	session := NewSession(s, cookieName)
 	opts := *s.Options
 	session.Options = &opts
 	session.IsNew = true
 	var err error
-	if c, errCookie := r.Cookie(name); errCookie == nil {
-		err = securecookie.DecodeMulti(name, c.Value, &session.values,
-			s.Codecs...)
+	if sid, errCookie := r.Cookie(cookieName); errCookie == nil {
+		session.ID = sid.Value
+		//get value
+		if s.value[sid.Value] != nil {
+			session.Values = s.value[sid.Value]
+		}
+	} else {
+		newid,err := s.generateID()
+		session.ID = newid
 		if err == nil {
-			session.IsNew = false
+			session.IsNew = true
 		}
 	}
 	return session, err
@@ -51,22 +62,33 @@ func (s *MemoryStore) New(r *http.Request, name string) (*Session, error) {
 // Save adds a single session to the response.
 func (s *MemoryStore) Save(r *http.Request, w http.ResponseWriter,
 	session *Session) error {
-	encoded, err := securecookie.EncodeMulti(session.CookieName(), session.values,
-		s.Codecs...)
-	if err != nil {
-		return err
+	//encoded, err := securecookie.EncodeMulti(session.CookieName(), session.Values,
+	//	s.Codecs...)
+	//if err != nil {
+	//	return err
+	//}
+	sid := session.ID
+	fmt.Println(session)
+	first := false
+	if s.value[sid] == nil {
+		first = true
+		s.value[sid] = session.Values
+	} else {
+		s.value[sid] = session.Values
 	}
-	http.SetCookie(w, NewCookie(session.CookieName(), encoded, session.Options))
+	//if not find in mem
+	if first {
+		http.SetCookie(w, NewCookie(session.CookieName(), session.ID, session.Options))
+	}
 	return nil
 }
 
-func (s *MemoryStore) MaxAge(age int) {
-	s.Options.MaxAge = age
 
-	// Set the maxAge for each securecookie instance.
-	for _, codec := range s.Codecs {
-		if sc, ok := codec.(*securecookie.SecureCookie); ok {
-			sc.MaxAge(age)
-		}
+func (s *MemoryStore) generateID() (string, error) {
+	b := make([]byte, s.SessionIDLength)
+	n, err := rand.Read(b)
+	if n != len(b) || err != nil {
+		return "", fmt.Errorf("Could not successfully read from the system CSPRNG")
 	}
+	return hex.EncodeToString(b), nil
 }

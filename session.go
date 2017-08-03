@@ -7,7 +7,7 @@ type Session struct {
 	// user data.
 	ID string
 	// Values contains the user-data for the session.
-	values  map[interface{}]interface{}
+	Values  map[interface{}]interface{}
 	Options *Options
 	IsNew   bool
 	store   Store
@@ -20,7 +20,7 @@ func (s *Session) Save(r *http.Request, w http.ResponseWriter) error {
 
 func NewSession(store Store, cookieName string) *Session {
 	return &Session{
-		values: make(map[interface{}]interface{}),
+		Values: make(map[interface{}]interface{}),
 		store:  store,
 		cookieName:   cookieName,
 	}
