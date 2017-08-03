@@ -32,7 +32,7 @@ func NewMemoryStore() *MemoryStore {
 			MaxAge: 86400 * 30,
 		},
 		SessionIDLength: 	64,
-		GCTime:				60,
+		GCTime:				10,
 		value: 				make(map[string]interface{}),
 		gc: 				make(map[string]int64),
 	}
@@ -133,12 +133,12 @@ func (s *MemoryStore) GC() {
 		}
 	}
 	if count > 0 {
-		log.Printf(errorInfo,"MemoryStore GC count:"+strconv.Itoa(count))
+		log.Printf(infoFormat,"MemoryStore GC count:"+strconv.Itoa(count))
 	}
 	s.mutex.Unlock()
 
 	select {
-		case <- time.After(time.Second * s.GCTime):
+	case <- time.After(time.Second * s.GCTime):
 		go s.GC()
 	}
 }
