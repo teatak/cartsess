@@ -11,6 +11,7 @@ var firstKey string = ""
 const (
 	prefixKey  = "github.com/gimke/cartsess:"
 	errorFormat = "[sessions] ERROR! %s\n"
+	errorInfo = "[sessions] INFO! %s\n"
 )
 
 // NewSession is called by session stores to create a new session instance.
