@@ -11,7 +11,7 @@ import (
 func main() {
 
 	memStore := cartsess.NewMemoryStore()
-	cookieStore := cartsess.NewCookieStore([]byte("K5EfWMujNTunxFlOfDT3PP7NPLY"))
+	cookieStore := cartsess.NewCookieStore([]byte("secret string"))
 	
 	r := cart.Default()
 	
@@ -26,7 +26,7 @@ func main() {
 		if t := cook.Get("token");t != nil {
 			token = t.(string)
 		} else {
-			cook.Set("token", "K5EfWMujNTunxFlOfDT3PP7NPLY")
+			cook.Set("token", "some token")
 		}
 
 		count := 0
