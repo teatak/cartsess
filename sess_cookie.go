@@ -5,15 +5,15 @@ import (
 	"net/http"
 )
 
-type MemoryStore struct {
+type CookieStore struct {
 	Codecs  []securecookie.Codec
 	Options *Options // default configuration
 }
 
-var _ Store = &MemoryStore{}
+var _ Store = &CookieStore{}
 
-func NewMemoryStore(keyPairs ...[]byte) *MemoryStore {
-	ms := &MemoryStore{
+func NewCookieStore(keyPairs ...[]byte) *CookieStore {
+	cs := &CookieStore{
 		Codecs: securecookie.CodecsFromPairs(keyPairs...),
 		Options: &Options{
 			Path:   "/",
@@ -21,18 +21,18 @@ func NewMemoryStore(keyPairs ...[]byte) *MemoryStore {
 		},
 	}
 
-	ms.MaxAge(ms.Options.MaxAge)
-	return ms
+	cs.MaxAge(cs.Options.MaxAge)
+	return cs
 }
 
-func (s *MemoryStore) Get(r *http.Request, cookieName string) (session *Session, err error) {
+func (s *CookieStore) Get(r *http.Request, cookieName string) (session *Session, err error) {
 	session, err = s.New(r, cookieName)
 	session.cookieName = cookieName
 	session.store = s
 	return
 }
 
-func (s *MemoryStore) New(r *http.Request, name string) (*Session, error) {
+func (s *CookieStore) New(r *http.Request, name string) (*Session, error) {
 	session := NewSession(s, name)
 	opts := *s.Options
 	session.Options = &opts
@@ -49,7 +49,7 @@ func (s *MemoryStore) New(r *http.Request, name string) (*Session, error) {
 }
 
 // Save adds a single session to the response.
-func (s *MemoryStore) Save(r *http.Request, w http.ResponseWriter,
+func (s *CookieStore) Save(r *http.Request, w http.ResponseWriter,
 	session *Session) error {
 	encoded, err := securecookie.EncodeMulti(session.CookieName(), session.values,
 		s.Codecs...)
@@ -60,7 +60,7 @@ func (s *MemoryStore) Save(r *http.Request, w http.ResponseWriter,
 	return nil
 }
 
-func (s *MemoryStore) MaxAge(age int) {
+func (s *CookieStore) MaxAge(age int) {
 	s.Options.MaxAge = age
 
 	// Set the maxAge for each securecookie instance.
