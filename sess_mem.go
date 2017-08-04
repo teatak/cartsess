@@ -135,7 +135,8 @@ func (s *MemoryStore) GC() {
 					}
 				}
 				if count > 0 {
-					log.Printf(infoFormat,"MemoryStore GC count:"+strconv.Itoa(count))
+					now := time.Now().Format("2006-01-02 15:04:05")
+					log.Printf(infoFormat,now,"MemoryStore GC count:"+strconv.Itoa(count))
 				}
 				s.GC()
 			}
