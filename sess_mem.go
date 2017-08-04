@@ -124,7 +124,7 @@ func (s *MemoryStore) innerGC() {
 		memage = 86400 * 30
 	}
 	count := 0
-	min := time.Now().Unix() - int64(s.Options.MaxAge)
+	min := time.Now().Unix() - int64(memage)
 	for sid := range s.value {
 		if s.gc[sid] < min {
 			delete(s.value, sid)
