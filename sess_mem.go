@@ -36,16 +36,16 @@ func NewMemoryStore() *MemoryStore {
 		value: 				make(map[string]interface{}),
 		gc: 				make(map[string]int64),
 	}
-	go s.GC()
+	s.GC()
 	return s
 }
 
 func (s *MemoryStore) Get(r *http.Request, cookieName string) (session *Session, err error) {
 	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 	session, err = s.New(r, cookieName)
 	session.cookieName = cookieName
 	session.store = s
-	s.mutex.RUnlock()
 	return
 }
 
@@ -74,34 +74,28 @@ func (s *MemoryStore) New(r *http.Request, cookieName string) (*Session, error) 
 // Save adds a single session to the response.
 func (s *MemoryStore) Save(r *http.Request, w http.ResponseWriter, session *Session) error {
 	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	sid := session.ID
-	first := false
-	if s.value[sid] == nil {
-		first = true
-	}
-
 	s.value[sid] = session.Values
 	s.gc[sid] = time.Now().Unix()
-
-	//if not find in mem
-	if first {
-		http.SetCookie(w, NewCookie(session.CookieName(), session.ID, session.Options))
-	} else {
-		http.SetCookie(w, NewCookie(session.CookieName(), session.ID, session.Options))
-	}
-	s.mutex.Unlock()
+	http.SetCookie(w, NewCookie(session.CookieName(), session.ID, session.Options))
 	return nil
 }
 
 func (s *MemoryStore) Destroy(r *http.Request, w http.ResponseWriter, session *Session) error {
 	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	sid := session.ID
 	delete(s.value,sid)
 	delete(s.gc,sid)
-	opt := session.Options
-	opt.MaxAge = -1
+	opt := &Options{
+		Path: 		session.Options.Path,
+		Domain: 	session.Options.Domain,
+		Secure:   	session.Options.Secure,
+		HttpOnly: 	session.Options.HttpOnly,
+		MaxAge: 	-1,
+	}
 	http.SetCookie(w, NewCookie(session.CookieName(), "", opt))
-	s.mutex.Unlock()
 	return nil
 }
 
@@ -123,25 +117,30 @@ func (s *MemoryStore) generateID() (string,error) {
 }
 
 func (s *MemoryStore) GC() {
-	s.mutex.Lock()
-	count := 0
-	min := time.Now().Unix() - int64(s.Options.MaxAge)
-	for sid := range s.value {
-		if s.gc[sid] < min {
-			s.clear(sid)
-			count++
+	go func() {
+		select {
+			case <- time.After(time.Second * s.GCTime): {
+				s.mutex.Lock()
+				defer s.mutex.Unlock()
+				memage := s.Options.MaxAge
+				if memage == 0 {
+					memage = 86400 * 30
+				}
+				count := 0
+				min := time.Now().Unix() - int64(s.Options.MaxAge)
+				for sid := range s.value {
+					if s.gc[sid] < min {
+						s.clear(sid)
+						count++
+					}
+				}
+				if count > 0 {
+					log.Printf(infoFormat,"MemoryStore GC count:"+strconv.Itoa(count))
+				}
+				s.GC()
+			}
 		}
-	}
-	if count > 0 {
-		log.Printf(infoFormat,"MemoryStore GC count:"+strconv.Itoa(count))
-	}
-
-	s.mutex.Unlock()
-
-	select {
-	case <- time.After(time.Second * s.GCTime):
-		go s.GC()
-	}
+	}()
 }
 
 func (s *MemoryStore) clear(sid string) {
