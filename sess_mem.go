@@ -120,7 +120,7 @@ func (s *MemoryStore) innerGC() {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	memage := s.Options.MaxAge
-	if memage == 0 {
+	if memage <= 0 {
 		memage = 86400 * 30
 	}
 	count := 0
