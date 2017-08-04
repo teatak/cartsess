@@ -16,7 +16,7 @@ type MemoryStore struct {
 	value        	map[string]interface{} //session store
 	gc        		map[string]int64 //session gc time store
 	SessionIDLength	int
-	GCTime			time.Duration
+	GCTime			time.Duration	//ever second run GC
 }
 
 var _ Store = &MemoryStore{}
@@ -32,7 +32,7 @@ func NewMemoryStore() *MemoryStore {
 			MaxAge: 86400 * 30,
 		},
 		SessionIDLength: 	64,
-		GCTime:				60,
+		GCTime:				5 * 60,
 		value: 				make(map[string]interface{}),
 		gc: 				make(map[string]int64),
 	}
@@ -116,35 +116,35 @@ func (s *MemoryStore) generateID() (string,error) {
 
 }
 
+func (s *MemoryStore) innerGC() {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	memage := s.Options.MaxAge
+	if memage == 0 {
+		memage = 86400 * 30
+	}
+	count := 0
+	min := time.Now().Unix() - int64(s.Options.MaxAge)
+	for sid := range s.value {
+		if s.gc[sid] < min {
+			delete(s.value, sid)
+			delete(s.gc, sid)
+			count++
+		}
+	}
+	if count > 0 {
+		now := time.Now().Format("2006-01-02 15:04:05")
+		log.Printf(infoFormat,now,"MemoryStore GC romove count:"+strconv.Itoa(count))
+	}
+	s.GC()
+}
+
 func (s *MemoryStore) GC() {
 	go func() {
 		select {
 			case <- time.After(time.Second * s.GCTime): {
-				s.mutex.Lock()
-				defer s.mutex.Unlock()
-				memage := s.Options.MaxAge
-				if memage == 0 {
-					memage = 86400 * 30
-				}
-				count := 0
-				min := time.Now().Unix() - int64(s.Options.MaxAge)
-				for sid := range s.value {
-					if s.gc[sid] < min {
-						s.clear(sid)
-						count++
-					}
-				}
-				if count > 0 {
-					now := time.Now().Format("2006-01-02 15:04:05")
-					log.Printf(infoFormat,now,"MemoryStore GC count:"+strconv.Itoa(count))
-				}
-				s.GC()
+				s.innerGC()
 			}
 		}
 	}()
-}
-
-func (s *MemoryStore) clear(sid string) {
-	delete(s.value, sid)
-	delete(s.gc, sid)
 }
