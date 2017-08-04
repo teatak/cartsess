@@ -4,14 +4,15 @@ import (
 	"net/http"
 	"github.com/gimke/cart"
 	"log"
+	"time"
 )
 
 var firstKey string = ""
 
 const (
 	prefixKey  	= "github.com/gimke/cartsess:"
-	errorFormat = "[CART-SESS] ERROR! %s\n"
-	infoFormat 	= "[CART-SESS] INFO %s\n"
+	errorFormat = "[CART-SESS] %v ERROR! %s\n"
+	infoFormat 	= "[CART-SESS] %v INFO %s\n"
 )
 
 // NewSession is called by session stores to create a new session instance.
@@ -80,7 +81,8 @@ func (s *SessionManager) Session() *Session {
 		var err error
 		s.session, err = s.store.Get(s.request, s.cookieName)
 		if err != nil {
-			log.Printf(errorFormat, err)
+			now := time.Now().Format("2006-01-02 15:04:05")
+			log.Printf(errorFormat, now, err)
 		}
 	}
 	return s.session
