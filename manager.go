@@ -9,6 +9,8 @@ import (
 
 var firstKey string = ""
 
+const Version = "v1.0.2"
+
 const (
 	prefixKey  	= "github.com/gimke/cartsess:"
 	errorFormat = "[CART-SESS] %v ERROR! %s\n"
