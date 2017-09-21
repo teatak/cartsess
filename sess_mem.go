@@ -100,7 +100,7 @@ func (s *MemoryStore) Destroy(r *http.Request, w http.ResponseWriter, session *S
 }
 
 
-var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-")
 
 func (s *MemoryStore) generateID() (string,error) {
 	var err error = nil
