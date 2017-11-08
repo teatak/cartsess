@@ -6,8 +6,8 @@ import (
 )
 
 type Options struct {
-	Path   string
-	Domain string
+	Path     string
+	Domain   string
 	MaxAge   int
 	Secure   bool
 	HttpOnly bool
@@ -19,7 +19,6 @@ type Store interface {
 	Save(r *http.Request, w http.ResponseWriter, s *Session) error
 	Destroy(r *http.Request, w http.ResponseWriter, s *Session) error
 }
-
 
 func NewCookie(name, value string, options *Options) *http.Cookie {
 	cookie := &http.Cookie{

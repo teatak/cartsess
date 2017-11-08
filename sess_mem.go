@@ -1,22 +1,22 @@
 package cartsess
 
 import (
-	"net/http"
-	"math/rand"
-	"time"
 	"errors"
-	"sync"
 	"log"
+	"math/rand"
+	"net/http"
 	"strconv"
+	"sync"
+	"time"
 )
 
 type MemoryStore struct {
-	mutex 			sync.RWMutex
-	Options 		*Options // default configuration
-	value        	map[string]interface{} //session store
-	gc        		map[string]int64 //session gc time store
-	SessionIDLength	int
-	GCTime			time.Duration	//ever second run GC
+	mutex           sync.RWMutex
+	Options         *Options               // default configuration
+	value           map[string]interface{} //session store
+	gc              map[string]int64       //session gc time store
+	SessionIDLength int
+	GCTime          time.Duration //ever second run GC
 }
 
 var _ Store = &MemoryStore{}
@@ -31,10 +31,10 @@ func NewMemoryStore() *MemoryStore {
 			Path:   "/",
 			MaxAge: 86400 * 30,
 		},
-		SessionIDLength: 	64,
-		GCTime:				5 * 60,
-		value: 				make(map[string]interface{}),
-		gc: 				make(map[string]int64),
+		SessionIDLength: 64,
+		GCTime:          5 * 60,
+		value:           make(map[string]interface{}),
+		gc:              make(map[string]int64),
 	}
 	s.GC()
 	return s
@@ -86,23 +86,22 @@ func (s *MemoryStore) Destroy(r *http.Request, w http.ResponseWriter, session *S
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	sid := session.ID
-	delete(s.value,sid)
-	delete(s.gc,sid)
+	delete(s.value, sid)
+	delete(s.gc, sid)
 	opt := &Options{
-		Path: 		session.Options.Path,
-		Domain: 	session.Options.Domain,
-		Secure:   	session.Options.Secure,
-		HttpOnly: 	session.Options.HttpOnly,
-		MaxAge: 	-1,
+		Path:     session.Options.Path,
+		Domain:   session.Options.Domain,
+		Secure:   session.Options.Secure,
+		HttpOnly: session.Options.HttpOnly,
+		MaxAge:   -1,
 	}
 	http.SetCookie(w, NewCookie(session.CookieName(), "", opt))
 	return nil
 }
 
-
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
-func (s *MemoryStore) generateID() (string,error) {
+func (s *MemoryStore) generateID() (string, error) {
 	var err error = nil
 	if s.SessionIDLength < 32 {
 		err = errors.New("SessionIDLength is too short the value should >= 32")
@@ -112,7 +111,7 @@ func (s *MemoryStore) generateID() (string,error) {
 	for i := range b {
 		b[i] = letterRunes[rand.Intn(len(letterRunes))]
 	}
-	return string(b),err
+	return string(b), err
 
 }
 
@@ -134,7 +133,7 @@ func (s *MemoryStore) innerGC() {
 	}
 	if count > 0 {
 		now := time.Now().Format("2006-01-02 15:04:05")
-		log.Printf(infoFormat,now,"MemoryStore GC romove count:"+strconv.Itoa(count))
+		log.Printf(infoFormat, now, "MemoryStore GC romove count:"+strconv.Itoa(count))
 	}
 	s.GC()
 }
@@ -142,7 +141,8 @@ func (s *MemoryStore) innerGC() {
 func (s *MemoryStore) GC() {
 	go func() {
 		select {
-			case <- time.After(time.Second * s.GCTime): {
+		case <-time.After(time.Second * s.GCTime):
+			{
 				s.innerGC()
 			}
 		}

@@ -7,11 +7,11 @@ type Session struct {
 	// user data.
 	ID string
 	// Values contains the user-data for the session.
-	Values  map[interface{}]interface{}
-	Options *Options
-	IsNew   bool
-	store   Store
-	cookieName    string
+	Values     map[interface{}]interface{}
+	Options    *Options
+	IsNew      bool
+	store      Store
+	cookieName string
 }
 
 func (s *Session) Save(r *http.Request, w http.ResponseWriter) error {
@@ -22,12 +22,11 @@ func (s *Session) Destroy(r *http.Request, w http.ResponseWriter) error {
 	return s.store.Destroy(r, w, s)
 }
 
-
 func NewSession(store Store, cookieName string) *Session {
 	return &Session{
-		Values: make(map[interface{}]interface{}),
-		store:  store,
-		cookieName:   cookieName,
+		Values:     make(map[interface{}]interface{}),
+		store:      store,
+		cookieName: cookieName,
 	}
 }
 

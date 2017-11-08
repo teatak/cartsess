@@ -1,9 +1,9 @@
 package cartsess
 
 import (
-	"net/http"
 	"github.com/gimke/cart"
 	"log"
+	"net/http"
 	"time"
 )
 
@@ -12,22 +12,22 @@ var firstKey string = ""
 const Version = "v1.0.3"
 
 const (
-	prefixKey  	= "github.com/gimke/cartsess:"
+	prefixKey   = "github.com/gimke/cartsess:"
 	errorFormat = "[CART-SESS] %v ERROR! %s\n"
-	infoFormat 	= "[CART-SESS] %v INFO %s\n"
+	infoFormat  = "[CART-SESS] %v INFO %s\n"
 )
 
 // NewSession is called by session stores to create a new session instance.
 func NewManager(cookieName string, store Store) cart.Handler {
 	return func(c *cart.Context, next cart.Next) {
 		s := &SessionManager{
-			cookieName:   	cookieName,
-			store:  	store,
-			request: 	c.Request,
-			written: 	false,
-			response: 	c.Response,
+			cookieName: cookieName,
+			store:      store,
+			request:    c.Request,
+			written:    false,
+			response:   c.Response,
 		}
-		c.Set(prefixKey + cookieName,s)
+		c.Set(prefixKey+cookieName, s)
 		if firstKey == "" {
 			//save firstKey as De
 			firstKey = prefixKey + cookieName
@@ -46,13 +46,13 @@ func GetByName(c *cart.Context, cookieName string) *SessionManager {
 }
 
 type SessionManager struct {
-	cookieName	string
-	store   	Store
-	id			string
-	request 	*http.Request
-	response  	http.ResponseWriter
-	session		*Session
-	written		bool
+	cookieName string
+	store      Store
+	id         string
+	request    *http.Request
+	response   http.ResponseWriter
+	session    *Session
+	written    bool
 }
 
 func (s *SessionManager) Get(key interface{}) interface{} {
@@ -89,6 +89,7 @@ func (s *SessionManager) Session() *Session {
 	}
 	return s.session
 }
+
 // Save is a convenience method to save this session. It is the same as calling
 // store.Save(request, response, session). You should call Save before writing to
 // the response or returning from the handler.
