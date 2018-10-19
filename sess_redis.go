@@ -59,7 +59,7 @@ func NewRedisStore() *RedisStore {
 			MaxAge: 86400 * 30,
 		},
 		SessionIDLength: 64,
-		Prefix:          "PMIS:SESSION:",
+		Prefix:          "",
 		Client: redis.NewClient(&redis.Options{
 			Addr:     "localhost:6379",
 			Password: "", // no password set
