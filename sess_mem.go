@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"sync"
 	"time"
-	"fmt"
 )
 
 type MemoryStore struct {
