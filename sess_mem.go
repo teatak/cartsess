@@ -83,7 +83,6 @@ func (s *MemoryStore) Save(r *http.Request, w http.ResponseWriter, session *Sess
 	cookie := NewCookie(session.CookieName(), session.ID, session.Options)
 	find := false
 	for _,v := range w.Header()["Set-Cookie"] {
-		fmt.Println(v)
 		if v == cookie.String() {
 			find = true
 		}
