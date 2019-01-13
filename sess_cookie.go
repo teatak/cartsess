@@ -54,7 +54,17 @@ func (s *CookieStore) Save(r *http.Request, w http.ResponseWriter, session *Sess
 	if err != nil {
 		return err
 	}
-	http.SetCookie(w, NewCookie(session.CookieName(), encoded, session.Options))
+
+	cookie := NewCookie(session.CookieName(), encoded, session.Options)
+	find := false
+	for _,v := range w.Header()["Set-Cookie"] {
+		if v == cookie.String() {
+			find = true
+		}
+	}
+	if !find {
+		http.SetCookie(w, cookie)
+	}
 	return nil
 }
 
