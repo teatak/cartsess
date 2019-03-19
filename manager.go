@@ -68,13 +68,13 @@ func (s *SessionManager) Set(key interface{}, val interface{}) {
 func (s *SessionManager) Delete(key interface{}) {
 	delete(s.Session().Values, key)
 	s.written = true
-	//s.Save()
+	s.Save()
 }
 
 func (s *SessionManager) Destroy() {
-	for key := range s.Session().Values {
-		s.Delete(key)
-	}
+	//for key := range s.Session().Values {
+	//	s.Delete(key)
+	//}
 	s.written = true
 	s.Session().Destroy(s.request, s.response)
 }
