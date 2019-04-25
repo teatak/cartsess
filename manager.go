@@ -76,6 +76,8 @@ func (s *SessionManager) Destroy() {
 	//	s.Delete(key)
 	//}
 	s.written = true
+	//clear values
+	s.Session().Values = make(map[interface{}]interface{})
 	s.Session().Destroy(s.request, s.response)
 }
 func (s *SessionManager) Session() *Session {
