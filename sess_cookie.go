@@ -69,8 +69,13 @@ func (s *CookieStore) Save(r *http.Request, w http.ResponseWriter, session *Sess
 }
 
 func (s *CookieStore) Destroy(r *http.Request, w http.ResponseWriter, session *Session) error {
-	opt := session.Options
-	opt.MaxAge = -1
+	opt := &Options{
+		Path:     session.Options.Path,
+		Domain:   session.Options.Domain,
+		Secure:   session.Options.Secure,
+		HttpOnly: session.Options.HttpOnly,
+		MaxAge:   -1,
+	}
 	http.SetCookie(w, NewCookie(session.CookieName(), "", opt))
 	return nil
 }
