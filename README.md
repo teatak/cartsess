@@ -4,8 +4,8 @@
 package main
 
 import (
-	"github.com/gimke/cart"
-	"github.com/gimke/cartsess"
+	"github.com/teatak/cart"
+	"github.com/teatak/cartsess"
 )
 
 func main() {
