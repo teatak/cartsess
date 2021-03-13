@@ -1,7 +1,7 @@
 package cartsess
 
 import (
-	"github.com/gimke/cart"
+	"github.com/teatak/cart"
 	"log"
 	"net/http"
 	"time"
@@ -12,7 +12,7 @@ var firstKey string = ""
 const Version = "v1.0.3"
 
 const (
-	prefixKey   = "github.com/gimke/cartsess:"
+	prefixKey   = "github.com/teatak/cartsess:"
 	errorFormat = "[CART-SESS] %v ERROR! %s\n"
 	infoFormat  = "[CART-SESS] %v INFO %s\n"
 )
