@@ -9,7 +9,7 @@ import (
 
 var firstKey string = ""
 
-const Version = "v1.0.3"
+const Version = "v1.0.7"
 
 const (
 	prefixKey   = "github.com/teatak/cartsess:"
