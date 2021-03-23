@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-redis/redis"
+	"log"
 	"math/rand"
 	"net/http"
 	"time"
@@ -117,11 +118,12 @@ func (s *RedisStore) Save(r *http.Request, w http.ResponseWriter, session *Sessi
 	sid := session.ID
 	b, err := Serialize(session)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return err
 	}
 	err = s.Client.Set(s.Prefix+sid, string(b), time.Duration(s.Options.MaxAge)*time.Second).Err()
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 
