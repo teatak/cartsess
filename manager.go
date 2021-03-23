@@ -62,6 +62,11 @@ func (s *SessionManager) Get(key interface{}) interface{} {
 func (s *SessionManager) Set(key interface{}, val interface{}) {
 	s.Session().Values[key] = val
 	s.written = true
+}
+
+func (s *SessionManager) SetSave(key interface{}, val interface{}) {
+	s.Session().Values[key] = val
+	s.written = true
 	s.Save()
 }
 
