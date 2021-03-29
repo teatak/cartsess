@@ -9,7 +9,7 @@ import (
 
 var firstKey string = ""
 
-const Version = "v1.0.8"
+const Version = "v1.0.9"
 
 const (
 	prefixKey   = "github.com/teatak/cartsess:"
@@ -62,18 +62,13 @@ func (s *SessionManager) Get(key interface{}) interface{} {
 func (s *SessionManager) Set(key interface{}, val interface{}) {
 	s.Session().Values[key] = val
 	s.written = true
-}
-
-func (s *SessionManager) SetSave(key interface{}, val interface{}) {
-	s.Session().Values[key] = val
-	s.written = true
-	s.Save()
+	_ = s.Save()
 }
 
 func (s *SessionManager) Delete(key interface{}) {
 	delete(s.Session().Values, key)
 	s.written = true
-	s.Save()
+	_ = s.Save()
 }
 
 func (s *SessionManager) Destroy() {
@@ -83,7 +78,7 @@ func (s *SessionManager) Destroy() {
 	s.written = true
 	//clear values
 	s.Session().Values = make(map[interface{}]interface{})
-	s.Session().Destroy(s.request, s.response)
+	_ = s.Session().Destroy(s.request, s.response)
 }
 func (s *SessionManager) Session() *Session {
 	if s.session == nil {
