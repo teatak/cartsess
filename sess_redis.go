@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/go-redis/redis"
 	"log"
 	"math/rand"
 	"net/http"
 	"time"
+
+	"github.com/go-redis/redis"
 )
 
 type RedisStore struct {
@@ -88,7 +89,7 @@ func (s *RedisStore) New(r *http.Request, cookieName string) (*Session, error) {
 		//get value
 		val, err := s.Client.Get(s.Prefix + sid.Value).Result()
 		if err == nil {
-			err = Deserialize([]byte(val), session)
+			_ = Deserialize([]byte(val), session)
 		}
 	} else {
 		newid, errId := s.generateID()

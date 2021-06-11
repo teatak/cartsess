@@ -1,10 +1,11 @@
 package cartsess
 
 import (
-	"github.com/teatak/cart"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/teatak/cart"
 )
 
 var firstKey string = ""
@@ -48,7 +49,6 @@ func GetByName(c *cart.Context, cookieName string) *SessionManager {
 type SessionManager struct {
 	cookieName string
 	store      Store
-	id         string
 	request    *http.Request
 	response   http.ResponseWriter
 	session    *Session
