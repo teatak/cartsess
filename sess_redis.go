@@ -1,6 +1,7 @@
 package cartsess
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,7 +10,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 )
 
 type RedisStore struct {
@@ -23,6 +24,11 @@ var _ Store = &RedisStore{}
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
+}
+
+func Context() (context.Context, context.CancelFunc) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	return ctx, cancel
 }
 
 // Serialize to JSON. Will err if there are unmarshalable key values
@@ -87,7 +93,9 @@ func (s *RedisStore) New(r *http.Request, cookieName string) (*Session, error) {
 	if sid, errCookie := r.Cookie(cookieName); errCookie == nil {
 		session.ID = sid.Value
 		//get value
-		val, err := s.Client.Get(s.Prefix + sid.Value).Result()
+		ctx, cancel := Context()
+		defer cancel()
+		val, err := s.Client.Get(ctx, s.Prefix+sid.Value).Result()
 		if err == nil {
 			_ = Deserialize([]byte(val), session)
 		}
@@ -122,7 +130,9 @@ func (s *RedisStore) Save(r *http.Request, w http.ResponseWriter, session *Sessi
 		log.Println(err)
 		return err
 	}
-	err = s.Client.Set(s.Prefix+sid, string(b), time.Duration(s.Options.MaxAge)*time.Second).Err()
+	ctx, cancel := Context()
+	defer cancel()
+	err = s.Client.Set(ctx, s.Prefix+sid, string(b), time.Duration(s.Options.MaxAge)*time.Second).Err()
 	if err != nil {
 		log.Println(err)
 		return err
@@ -136,7 +146,9 @@ func (s *RedisStore) Save(r *http.Request, w http.ResponseWriter, session *Sessi
 
 func (s *RedisStore) Destroy(r *http.Request, w http.ResponseWriter, session *Session) error {
 	sid := session.ID
-	s.Client.Del(s.Prefix + sid)
+	ctx, cancel := Context()
+	defer cancel()
+	s.Client.Del(ctx, s.Prefix+sid)
 	opt := &Options{
 		Path:     session.Options.Path,
 		Domain:   session.Options.Domain,
