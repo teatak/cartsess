@@ -11,6 +11,7 @@ type Options struct {
 	MaxAge   int
 	Secure   bool
 	HttpOnly bool
+	SameSite http.SameSite
 }
 
 type Store interface {
@@ -29,6 +30,7 @@ func NewCookie(name, value string, options *Options) *http.Cookie {
 		MaxAge:   options.MaxAge,
 		Secure:   options.Secure,
 		HttpOnly: options.HttpOnly,
+		SameSite: options.SameSite,
 	}
 	if options.MaxAge > 0 {
 		d := time.Duration(options.MaxAge) * time.Second
