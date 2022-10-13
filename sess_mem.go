@@ -143,11 +143,7 @@ func (s *MemoryStore) innerGC() {
 
 func (s *MemoryStore) GC() {
 	go func() {
-		select {
-		case <-time.After(time.Second * s.GCTime):
-			{
-				s.innerGC()
-			}
-		}
+		<-time.After(time.Second * s.GCTime)
+		s.innerGC()
 	}()
 }
