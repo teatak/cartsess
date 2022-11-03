@@ -1,6 +1,7 @@
 package cartsess
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -39,7 +40,11 @@ func NewManager(cookieName string, store Store) cart.Handler {
 
 // shortcut to get session
 func Default(c *cart.Context) *SessionManager {
-	return c.MustGet(firstKey).(*SessionManager)
+	if firstKey == "" {
+		panic(fmt.Errorf("must run NewManager before use session"))
+	} else {
+		return c.MustGet(firstKey).(*SessionManager)
+	}
 }
 
 func GetByName(c *cart.Context, cookieName string) *SessionManager {
