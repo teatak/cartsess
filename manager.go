@@ -11,7 +11,7 @@ import (
 
 var firstKey string = ""
 
-const Version = "v1.0.10"
+const Version = "v1.0.14"
 
 const (
 	prefixKey   = "github.com/teatak/cartsess:"
