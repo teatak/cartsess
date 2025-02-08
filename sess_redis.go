@@ -95,13 +95,15 @@ func (s *RedisStore) New(r *http.Request, cookieName string) (*Session, error) {
 		//get value
 		ctx, cancel := Context()
 		defer cancel()
-		val, err := s.Client.Get(ctx, s.Prefix+sid.Value).Result()
-		if err == nil {
+		val, _err := s.Client.Get(ctx, s.Prefix+sid.Value).Result()
+		if _err == nil {
 			_ = Deserialize([]byte(val), session)
+		} else {
+			err = _err
 		}
 	} else {
-		newid, errId := s.generateID()
-		err = errId
+		newid, _err := s.generateID()
+		err = _err
 		session.ID = newid
 		session.IsNew = true
 	}
@@ -119,7 +121,6 @@ func (s *RedisStore) generateID() (string, error) {
 		b[i] = letterRunes[rand.Intn(len(letterRunes))]
 	}
 	return string(b), err
-
 }
 
 // Save adds a single session to the response.
@@ -140,7 +141,6 @@ func (s *RedisStore) Save(r *http.Request, w http.ResponseWriter, session *Sessi
 
 	cookie := NewCookie(session.CookieName(), session.ID, session.Options)
 	http.SetCookie(w, cookie)
-
 	return nil
 }
 

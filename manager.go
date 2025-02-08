@@ -11,7 +11,7 @@ import (
 
 var firstKey string = ""
 
-const Version = "v1.0.14"
+const Version = "v1.0.16"
 
 const (
 	prefixKey   = "github.com/teatak/cartsess:"
@@ -60,39 +60,48 @@ type SessionManager struct {
 	written    bool
 }
 
-func (s *SessionManager) Get(key interface{}) interface{} {
-	return s.Session().Values[key]
+func (s *SessionManager) Get(key interface{}) (interface{}, error) {
+	sess, err := s.Session()
+	return sess.Values[key], err
 }
 
-func (s *SessionManager) Set(key interface{}, val interface{}) {
-	s.Session().Values[key] = val
-	s.written = true
+func (s *SessionManager) Set(key interface{}, val interface{}) error {
+	sess, err := s.Session()
+	if err == nil {
+		sess.Values[key] = val
+		s.written = true
+	}
+	return err
 }
 
-func (s *SessionManager) Delete(key interface{}) {
-	delete(s.Session().Values, key)
-	s.written = true
+func (s *SessionManager) Delete(key interface{}) error {
+	sess, err := s.Session()
+	if err == nil {
+		delete(sess.Values, key)
+		s.written = true
+	}
+	return err
 }
 
-func (s *SessionManager) Destroy() {
-	//for key := range s.Session().Values {
-	//	s.Delete(key)
-	//}
-	s.written = true
-	//clear values
-	s.Session().Values = make(map[interface{}]interface{})
-	_ = s.Session().Destroy(s.request, s.response)
+func (s *SessionManager) Destroy() error {
+	sess, err := s.Session()
+	if err == nil {
+		sess.Values = make(map[interface{}]interface{})
+		err = sess.Destroy(s.request, s.response)
+		s.written = true
+	}
+	return err
 }
-func (s *SessionManager) Session() *Session {
+func (s *SessionManager) Session() (*Session, error) {
+	var err error
 	if s.session == nil {
-		var err error
 		s.session, err = s.store.Get(s.request, s.cookieName)
 		if err != nil {
 			now := time.Now().Format("2006-01-02 15:04:05")
 			log.Printf(errorFormat, now, err)
 		}
 	}
-	return s.session
+	return s.session, err
 }
 
 // Save is a convenience method to save this session. It is the same as calling
@@ -100,11 +109,11 @@ func (s *SessionManager) Session() *Session {
 // the response or returning from the handler.
 func (s *SessionManager) Save() error {
 	if s.Written() {
-		e := s.Session().Save(s.request, s.response)
-		if e == nil {
-			s.written = false
+		sess, err := s.Session()
+		if err == nil {
+			err = sess.Save(s.request, s.response)
 		}
-		return e
+		return err
 	}
 	return nil
 }

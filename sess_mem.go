@@ -67,7 +67,6 @@ func (s *MemoryStore) New(r *http.Request, cookieName string) (*Session, error) 
 		session.ID = newid
 		session.IsNew = true
 	}
-
 	return session, err
 }
 
@@ -81,7 +80,6 @@ func (s *MemoryStore) Save(r *http.Request, w http.ResponseWriter, session *Sess
 
 	cookie := NewCookie(session.CookieName(), session.ID, session.Options)
 	http.SetCookie(w, cookie)
-
 	return nil
 }
 
@@ -115,7 +113,6 @@ func (s *MemoryStore) generateID() (string, error) {
 		b[i] = letterRunes[rand.Intn(len(letterRunes))]
 	}
 	return string(b), err
-
 }
 
 func (s *MemoryStore) innerGC() {
