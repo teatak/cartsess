@@ -89,6 +89,7 @@ func (s *SessionManager) Destroy() error {
 	if err == nil {
 		sess.Values = make(map[interface{}]interface{})
 		err = sess.Destroy(s.request, s.response)
+		//end written
 		s.written = false
 	}
 	return err
@@ -114,6 +115,8 @@ func (s *SessionManager) Save() error {
 		if err == nil {
 			err = sess.Save(s.request, s.response)
 		}
+		//end written
+		s.written = false
 		return err
 	}
 	return nil
