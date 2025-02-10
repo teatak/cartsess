@@ -11,8 +11,6 @@ import (
 
 var firstKey string = ""
 
-const Version = "v1.0.16"
-
 const (
 	prefixKey   = "github.com/teatak/cartsess:"
 	errorFormat = "[CART-SESS] %v ERROR! %s\n"
@@ -34,6 +32,9 @@ func NewManager(cookieName string, store Store) cart.Handler {
 			//save firstKey as De
 			firstKey = prefixKey + cookieName
 		}
+		c.Response.Before(func() {
+			s.Save()
+		})
 		next()
 	}
 }
