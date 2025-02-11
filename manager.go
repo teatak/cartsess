@@ -32,6 +32,7 @@ func NewManager(cookieName string, store Store) cart.Handler {
 			//save firstKey as De
 			firstKey = prefixKey + cookieName
 		}
+		//save before response return
 		c.Response.Before(func() {
 			s.Save()
 		})
