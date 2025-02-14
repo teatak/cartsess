@@ -16,7 +16,7 @@ import (
 type RedisStore struct {
 	Options         *Options // default configuration
 	SessionIDLength int
-	Client          *redis.Client
+	Client          redis.UniversalClient
 	Prefix          string
 }
 
