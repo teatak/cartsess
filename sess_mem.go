@@ -59,7 +59,7 @@ func (s *MemoryStore) New(r *http.Request, cookieName string) (*Session, error) 
 		session.ID = sid.Value
 		//get value
 		if s.value[sid.Value] != nil {
-			session.Values = s.value[sid.Value].(map[interface{}]interface{})
+			session.Values = s.value[sid.Value].(map[string]interface{})
 		}
 	} else {
 		newid, errId := s.generateID()

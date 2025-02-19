@@ -35,13 +35,7 @@ func Context() (context.Context, context.CancelFunc) {
 func Serialize(s *Session) ([]byte, error) {
 	m := make(map[string]interface{}, len(s.Values))
 	for k, v := range s.Values {
-		ks, ok := k.(string)
-		if !ok {
-			err := fmt.Errorf("non-string key value, cannot serialize session to JSON: %v", k)
-			fmt.Printf("redistore.JSONSerializer.serialize() Error: %v", err)
-			return nil, err
-		}
-		m[ks] = v
+		m[k] = v
 	}
 	return json.Marshal(m)
 }

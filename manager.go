@@ -62,12 +62,12 @@ type SessionManager struct {
 	written    bool
 }
 
-func (s *SessionManager) Get(key interface{}) (interface{}, error) {
+func (s *SessionManager) Get(key string) (interface{}, error) {
 	sess, err := s.Session()
 	return sess.Values[key], err
 }
 
-func (s *SessionManager) Set(key interface{}, val interface{}) error {
+func (s *SessionManager) Set(key string, val interface{}) error {
 	sess, err := s.Session()
 	if err == nil {
 		sess.Values[key] = val
@@ -76,7 +76,7 @@ func (s *SessionManager) Set(key interface{}, val interface{}) error {
 	return err
 }
 
-func (s *SessionManager) Delete(key interface{}) error {
+func (s *SessionManager) Delete(key string) error {
 	sess, err := s.Session()
 	if err == nil {
 		delete(sess.Values, key)
@@ -88,7 +88,7 @@ func (s *SessionManager) Delete(key interface{}) error {
 func (s *SessionManager) Destroy() error {
 	sess, err := s.Session()
 	if err == nil {
-		sess.Values = make(map[interface{}]interface{})
+		sess.Values = make(map[string]interface{})
 		err = sess.Destroy(s.request, s.response)
 		//end written
 		s.written = false
