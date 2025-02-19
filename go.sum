@@ -8,7 +8,5 @@ github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f h1:lO4WD4F/r
 github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f/go.mod h1:cuUVRXasLTGF7a8hSLbxyZXjz+1KgoB3wDUb6vlszIc=
 github.com/redis/go-redis/v9 v9.7.0 h1:HhLSs+B6O021gwzl+locl0zEDnyNkxMtf/Z3NNBMa9E=
 github.com/redis/go-redis/v9 v9.7.0/go.mod h1:f6zhXITC7JUJIlPEiBOTXxJgPLdZcA93GewI7inzyWw=
-github.com/teatak/cart v1.0.22 h1:QNhAU3DgHUh2JOPzfgwhVL7TH+K7qomxYyHKSz95wk8=
-github.com/teatak/cart v1.0.22/go.mod h1:DgFl81qPa06Zmq6shou5pwObHSVgHWPKu8WHIeLjMCY=
-github.com/teatak/cart v1.0.23 h1:M49URIt8cV2jhHpT3jZyoOo8j2TmeXoSLrntb4Aedk4=
-github.com/teatak/cart v1.0.23/go.mod h1:DgFl81qPa06Zmq6shou5pwObHSVgHWPKu8WHIeLjMCY=
+github.com/teatak/cart v1.1.1 h1:s7C2hk+E1NK+yJ83IaKEwzsCRkIdP22Rp5oyJg2wnFQ=
+github.com/teatak/cart v1.1.1/go.mod h1:DgFl81qPa06Zmq6shou5pwObHSVgHWPKu8WHIeLjMCY=
