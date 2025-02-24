@@ -34,7 +34,11 @@ func NewManager(cookieName string, store Store) cart.Handler {
 		}
 		//save before response return
 		c.Response.Before(func() {
-			s.Save()
+			err := s.Save()
+			if err != nil {
+				now := time.Now().Format("2006-01-02 15:04:05")
+				log.Printf(errorFormat, now, err)
+			}
 		})
 		next()
 	}
