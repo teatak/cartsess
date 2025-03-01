@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/teatak/cart"
 )
@@ -13,8 +12,8 @@ var firstKey string = ""
 
 const (
 	prefixKey   = "github.com/teatak/cartsess:"
-	errorFormat = "[CART-SESS] %v ERROR! %s\n"
-	infoFormat  = "[CART-SESS] %v INFO %s\n"
+	errorFormat = "[SESS]  ERROR! %s\n"
+	infoFormat  = "[SESS]  INFO %s\n"
 )
 
 // NewSession is called by session stores to create a new session instance.
@@ -36,8 +35,7 @@ func NewManager(cookieName string, store Store) cart.Handler {
 		c.Response.Before(func() {
 			err := s.Save()
 			if err != nil {
-				now := time.Now().Format("2006-01-02 15:04:05")
-				log.Printf(errorFormat, now, err)
+				log.Printf(errorFormat, err)
 			}
 		})
 		next()
@@ -104,8 +102,7 @@ func (s *SessionManager) Session() (*Session, error) {
 	if s.session == nil {
 		s.session, err = s.store.Get(s.request, s.cookieName)
 		if err != nil {
-			now := time.Now().Format("2006-01-02 15:04:05")
-			log.Printf(errorFormat, now, err)
+			log.Printf(errorFormat, err)
 		}
 	}
 	return s.session, err

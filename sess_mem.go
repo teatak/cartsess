@@ -132,8 +132,7 @@ func (s *MemoryStore) innerGC() {
 		}
 	}
 	if count > 0 {
-		now := time.Now().Format("2006-01-02 15:04:05")
-		log.Printf(infoFormat, now, "MemoryStore GC romove count:"+strconv.Itoa(count))
+		log.Printf(infoFormat, "MemoryStore GC romove count:"+strconv.Itoa(count))
 	}
 	s.GC()
 }
