@@ -1,7 +1,9 @@
 package cartsess
 
 import (
+	"bytes"
 	"context"
+	"encoding/gob"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -18,6 +20,7 @@ type RedisStore struct {
 	SessionIDLength int
 	Client          redis.UniversalClient
 	Prefix          string
+	Serializer      SessionSerializer
 }
 
 var _ Store = &RedisStore{}
@@ -31,17 +34,22 @@ func Context() (context.Context, context.CancelFunc) {
 	return ctx, cancel
 }
 
-// Serialize to JSON. Will err if there are unmarshalable key values
-func Serialize(s *Session) ([]byte, error) {
-	m := make(map[string]interface{}, len(s.Values))
-	for k, v := range s.Values {
+type SessionSerializer interface {
+	Deserialize(d []byte, session *Session) error
+	Serialize(session *Session) ([]byte, error)
+}
+
+type JSONSerializer struct{}
+
+func (s JSONSerializer) Serialize(session *Session) ([]byte, error) {
+	m := make(map[string]interface{}, len(session.Values))
+	for k, v := range session.Values {
 		m[k] = v
 	}
 	return json.Marshal(m)
 }
 
-// Deserialize back to map[string]interface{}
-func Deserialize(d []byte, s *Session) error {
+func (s JSONSerializer) Deserialize(d []byte, session *Session) error {
 	m := make(map[string]interface{})
 	err := json.Unmarshal(d, &m)
 	if err != nil {
@@ -49,9 +57,26 @@ func Deserialize(d []byte, s *Session) error {
 		return err
 	}
 	for k, v := range m {
-		s.Values[k] = v
+		session.Values[k] = v
 	}
 	return nil
+}
+
+type GobSerializer struct{}
+
+func (s GobSerializer) Serialize(session *Session) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	enc := gob.NewEncoder(buf)
+	err := enc.Encode(session.Values)
+	if err == nil {
+		return buf.Bytes(), nil
+	}
+	return nil, err
+}
+
+func (s GobSerializer) Deserialize(d []byte, session *Session) error {
+	dec := gob.NewDecoder(bytes.NewBuffer(d))
+	return dec.Decode(&session.Values)
 }
 
 func NewRedisStore() *RedisStore {
@@ -67,8 +92,13 @@ func NewRedisStore() *RedisStore {
 			Password: "", // no password set
 			DB:       0,  // use default DB
 		}),
+		Serializer: GobSerializer{},
 	}
 	return s
+}
+
+func (s *RedisStore) SetSerializer(sessionSerializer SessionSerializer) {
+	s.Serializer = sessionSerializer
 }
 
 func (s *RedisStore) Get(r *http.Request, cookieName string) (session *Session, err error) {
@@ -91,7 +121,7 @@ func (s *RedisStore) New(r *http.Request, cookieName string) (*Session, error) {
 		defer cancel()
 		val, _err := s.Client.Get(ctx, s.Prefix+sid.Value).Result()
 		if _err == nil {
-			_ = Deserialize([]byte(val), session)
+			_ = s.Serializer.Deserialize([]byte(val), session)
 		} else {
 			err = _err
 		}
@@ -120,7 +150,7 @@ func (s *RedisStore) generateID() (string, error) {
 // Save adds a single session to the response.
 func (s *RedisStore) Save(r *http.Request, w http.ResponseWriter, session *Session) error {
 	sid := session.ID
-	b, err := Serialize(session)
+	b, err := s.Serializer.Serialize(session)
 	if err != nil {
 		log.Println(err)
 		return err
