@@ -2,10 +2,10 @@ package cartsess
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/teatak/cart"
+	"github.com/teatak/cart/clog"
 )
 
 var firstKey string = ""
@@ -35,7 +35,7 @@ func NewManager(cookieName string, store Store) cart.Handler {
 		c.Response.Before(func() {
 			err := s.Save()
 			if err != nil {
-				log.Printf(errorFormat, err)
+				clog.Printf(errorFormat, err)
 			}
 		})
 		next()
@@ -102,7 +102,7 @@ func (s *SessionManager) Session() (*Session, error) {
 	if s.session == nil {
 		s.session, err = s.store.Get(s.request, s.cookieName)
 		if err != nil {
-			log.Printf(errorFormat, err)
+			clog.Printf(errorFormat, err)
 		}
 	}
 	return s.session, err
