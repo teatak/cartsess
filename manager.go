@@ -71,7 +71,7 @@ func (s *SessionManager) Get(key string) (interface{}, error) {
 
 func (s *SessionManager) Set(key string, val interface{}) error {
 	sess, err := s.Session()
-	if err == nil {
+	if sess != nil {
 		sess.Values[key] = val
 		s.written = true
 	}
@@ -80,7 +80,7 @@ func (s *SessionManager) Set(key string, val interface{}) error {
 
 func (s *SessionManager) Delete(key string) error {
 	sess, err := s.Session()
-	if err == nil {
+	if sess != nil {
 		delete(sess.Values, key)
 		s.written = true
 	}

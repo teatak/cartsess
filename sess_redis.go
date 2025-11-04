@@ -123,14 +123,13 @@ func (s *RedisStore) New(r *http.Request, cookieName string) (*Session, error) {
 		if _err == nil {
 			_ = s.Serializer.Deserialize([]byte(val), session)
 		} else {
-			newid, _err := s.generateID()
 			err = _err
+			newid, _ := s.generateID()
 			session.ID = newid
 			session.IsNew = true
 		}
 	} else {
-		newid, _err := s.generateID()
-		err = _err
+		newid, _ := s.generateID()
 		session.ID = newid
 		session.IsNew = true
 	}
