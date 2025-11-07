@@ -1,7 +1,6 @@
 package cartsess
 
 import (
-	"errors"
 	"log"
 	"math/rand"
 	"net/http"
@@ -62,8 +61,7 @@ func (s *MemoryStore) New(r *http.Request, cookieName string) (*Session, error) 
 			session.Values = s.value[sid.Value].(map[string]interface{})
 		}
 	} else {
-		newid, errId := s.generateID()
-		err = errId
+		newid := s.generateID()
 		session.ID = newid
 		session.IsNew = true
 	}
@@ -102,17 +100,15 @@ func (s *MemoryStore) Destroy(r *http.Request, w http.ResponseWriter, session *S
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
-func (s *MemoryStore) generateID() (string, error) {
-	var err error = nil
+func (s *MemoryStore) generateID() string {
 	if s.SessionIDLength < 32 {
-		err = errors.New("SessionIDLength is too short the value should >= 32")
 		s.SessionIDLength = 32
 	}
 	b := make([]rune, s.SessionIDLength)
 	for i := range b {
 		b[i] = letterRunes[rand.Intn(len(letterRunes))]
 	}
-	return string(b), err
+	return string(b)
 }
 
 func (s *MemoryStore) innerGC() {

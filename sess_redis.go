@@ -5,8 +5,6 @@ import (
 	"context"
 	"encoding/gob"
 	"encoding/json"
-	"errors"
-	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
@@ -53,7 +51,7 @@ func (s JSONSerializer) Deserialize(d []byte, session *Session) error {
 	m := make(map[string]interface{})
 	err := json.Unmarshal(d, &m)
 	if err != nil {
-		fmt.Printf("redistore.JSONSerializer.deserialize() Error: %v", err)
+		log.Printf("redistore.JSONSerializer.deserialize() Error: %v", err)
 		return err
 	}
 	for k, v := range m {
@@ -121,32 +119,38 @@ func (s *RedisStore) New(r *http.Request, cookieName string) (*Session, error) {
 		defer cancel()
 		val, _err := s.Client.Get(ctx, s.Prefix+sid.Value).Result()
 		if _err == nil {
-			_ = s.Serializer.Deserialize([]byte(val), session)
+			_err = s.Serializer.Deserialize([]byte(val), session)
+			if _err != nil {
+				err = _err
+			}
+			session.IsNew = false
 		} else {
-			err = _err
-			newid, _ := s.generateID()
+			if _err == redis.Nil {
+				err = ErrNotFound
+			} else {
+				err = _err
+			}
+			newid := s.generateID()
 			session.ID = newid
 			session.IsNew = true
 		}
 	} else {
-		newid, _ := s.generateID()
+		newid := s.generateID()
 		session.ID = newid
 		session.IsNew = true
 	}
 	return session, err
 }
 
-func (s *RedisStore) generateID() (string, error) {
-	var err error = nil
+func (s *RedisStore) generateID() string {
 	if s.SessionIDLength < 32 {
-		err = errors.New("SessionIDLength is too short the value should >= 32")
 		s.SessionIDLength = 32
 	}
 	b := make([]rune, s.SessionIDLength)
 	for i := range b {
 		b[i] = letterRunes[rand.Intn(len(letterRunes))]
 	}
-	return string(b), err
+	return string(b)
 }
 
 // Save adds a single session to the response.

@@ -16,6 +16,8 @@ const (
 	infoFormat  = "[SESS]  INFO %s\n"
 )
 
+var ErrNotFound = fmt.Errorf("not found")
+
 // NewSession is called by session stores to create a new session instance.
 func NewManager(cookieName string, store Store) cart.Handler {
 	return func(c *cart.Context, next cart.Next) {
@@ -89,7 +91,7 @@ func (s *SessionManager) Delete(key string) error {
 
 func (s *SessionManager) Destroy() error {
 	sess, err := s.Session()
-	if err == nil {
+	if sess != nil {
 		sess.Values = make(map[string]interface{})
 		err = sess.Destroy(s.request, s.response)
 		//end written
