@@ -4,7 +4,7 @@
 package main
 
 import (
-	"github.com/teatak/cart"
+	"github.com/teatak/cart/v2"
 	"github.com/teatak/cartsess"
 )
 

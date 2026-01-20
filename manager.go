@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/teatak/cart"
+	"github.com/teatak/cart/v2"
 )
 
 var firstKey string = ""
@@ -33,13 +33,14 @@ func NewManager(cookieName string, store Store) cart.Handler {
 			//save firstKey as De
 			firstKey = prefixKey + cookieName
 		}
-		//save before response return
-		c.Response.Before(func() {
+		// Register callback to save session before response is written
+		c.Response.OnBeforeWrite(func() {
 			err := s.Save()
 			if err != nil {
 				log.Printf(errorFormat, err)
 			}
 		})
+
 		next()
 	}
 }
