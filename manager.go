@@ -1,14 +1,17 @@
 package cartsess
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
-
-	"github.com/teatak/cart/v2"
+	"sync"
 )
 
-var firstKey string = ""
+var (
+	firstKey     string
+	firstKeyOnce sync.Once
+)
 
 const (
 	prefixKey   = "github.com/teatak/cartsess:"
@@ -18,44 +21,105 @@ const (
 
 var ErrNotFound = fmt.Errorf("not found")
 
-// NewSession is called by session stores to create a new session instance.
-func NewManager(cookieName string, store Store) cart.Handler {
-	return func(c *cart.Context, next cart.Next) {
-		s := &SessionManager{
-			cookieName: cookieName,
-			store:      store,
-			request:    c.Request,
-			written:    false,
-			response:   c.Response,
-		}
-		c.Set(prefixKey+cookieName, s)
-		if firstKey == "" {
-			//save firstKey as De
-			firstKey = prefixKey + cookieName
-		}
-		// Register callback to save session before response is written
-		c.Response.OnBeforeWrite(func() {
-			err := s.Save()
-			if err != nil {
-				log.Printf(errorFormat, err)
-			}
-		})
+// writerWrapper wraps http.ResponseWriter to intercept WriteHeader
+// and save the session before headers are written.
+type writerWrapper struct {
+	http.ResponseWriter
+	sess        *SessionManager
+	wroteHeader bool
+}
 
-		next()
+func (w *writerWrapper) Write(b []byte) (int, error) {
+	if !w.wroteHeader {
+		w.WriteHeader(http.StatusOK)
+	}
+	return w.ResponseWriter.Write(b)
+}
+
+func (w *writerWrapper) WriteHeader(code int) {
+	if w.wroteHeader {
+		return
+	}
+	w.wroteHeader = true
+	// Save session before writing headers
+	err := w.sess.Save()
+	if err != nil {
+		log.Printf(errorFormat, err)
+	}
+	w.ResponseWriter.WriteHeader(code)
+}
+
+// NewManager creates a standard net/http middleware for session management.
+func NewManager(cookieName string, store Store) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			s := &SessionManager{
+				cookieName: cookieName,
+				store:      store,
+				request:    r,
+				written:    false,
+				response:   w,
+			}
+
+			// Store session manager in context
+			ctx := context.WithValue(r.Context(), prefixKey+cookieName, s)
+
+			firstKeyOnce.Do(func() {
+				firstKey = prefixKey + cookieName
+			})
+			// Also store as first key if it's the first one initialized (best effort for context)
+			// Note: This relies on global state which is tricky with context.
+			// Ideally users should use context keys properly.
+			// For backward compatibility with "Default", we rely on the global firstKey
+			// but we need to ensure the value is in the context with that firstKey too?
+			// Actually, "Default" uses "firstKey" to look up. So if we save with firstKey, it works.
+			if firstKey == prefixKey+cookieName {
+				// Optimization: if this IS the first key, no need to duplicate?
+				// But we need to make sure subsequent lookups work.
+				// The previous implementation used c.Set(prefixKey+cookieName) AND logic for firstKey.
+				// Here we just use the unique key.
+			}
+
+			// Wrap response writer to handle session saving
+			wrapper := &writerWrapper{
+				ResponseWriter: w,
+				sess:           s,
+			}
+
+			// We update the request with new context
+			// Check if firstKey is different from current key
+			if firstKey != "" && firstKey != prefixKey+cookieName {
+				// If we have a firstKey defined globally, we might want to ensure it's accessible?
+				// But context is per-request. firstKey is global.
+				// If multiple middleware are used, they chain.
+				// If this IS the middleware for firstKey, it's already set.
+			}
+
+			next.ServeHTTP(wrapper, r.WithContext(ctx))
+		})
 	}
 }
 
-// shortcut to get session
-func Default(c *cart.Context) *SessionManager {
+// Default gets the default session manager from the context.
+func Default(ctx context.Context) *SessionManager {
 	if firstKey == "" {
 		panic(fmt.Errorf("must run NewManager before use session"))
-	} else {
-		return c.MustGet(firstKey).(*SessionManager)
 	}
+	// Try to get from context
+	if v := ctx.Value(firstKey); v != nil {
+		return v.(*SessionManager)
+	}
+	// Fallback or panic? "Default" implies it must exist.
+	// In standard net/http, if middleware didn't run, this will panic or return nil.
+	panic(fmt.Errorf("session not found in context (did you wrap the handler with NewManager?)"))
 }
 
-func GetByName(c *cart.Context, cookieName string) *SessionManager {
-	return c.MustGet(prefixKey + cookieName).(*SessionManager)
+// GetByName gets a named session manager from the context.
+func GetByName(ctx context.Context, cookieName string) *SessionManager {
+	if v := ctx.Value(prefixKey + cookieName); v != nil {
+		return v.(*SessionManager)
+	}
+	panic(fmt.Errorf("session '%s' not found in context", cookieName))
 }
 
 type SessionManager struct {
@@ -69,6 +133,9 @@ type SessionManager struct {
 
 func (s *SessionManager) Get(key string) (interface{}, error) {
 	sess, err := s.Session()
+	if sess == nil {
+		return nil, err
+	}
 	return sess.Values[key], err
 }
 

@@ -32,6 +32,9 @@ func NewCookie(name, value string, options *Options) *http.Cookie {
 		HttpOnly: options.HttpOnly,
 		SameSite: options.SameSite,
 	}
+	if cookie.SameSite == http.SameSiteDefaultMode {
+		cookie.SameSite = http.SameSiteLaxMode
+	}
 	if options.MaxAge > 0 {
 		d := time.Duration(options.MaxAge) * time.Second
 		cookie.Expires = time.Now().Add(d)

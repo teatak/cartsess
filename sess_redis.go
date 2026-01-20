@@ -6,7 +6,6 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"log"
-	"math/rand"
 	"net/http"
 	"time"
 
@@ -22,10 +21,6 @@ type RedisStore struct {
 }
 
 var _ Store = &RedisStore{}
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
 
 func Context() (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -77,22 +72,32 @@ func (s GobSerializer) Deserialize(d []byte, session *Session) error {
 	return dec.Decode(&session.Values)
 }
 
-func NewRedisStore() *RedisStore {
-	s := &RedisStore{
+func NewRedisStore(opts ...*redis.Options) *RedisStore {
+	var redisOpt *redis.Options
+	if len(opts) > 0 {
+		redisOpt = opts[0]
+	} else {
+		redisOpt = &redis.Options{
+			Addr:     "localhost:6379",
+			Password: "", // no password set
+			DB:       0,  // use default DB
+		}
+	}
+
+	return NewRedisStoreWithClient(redis.NewClient(redisOpt))
+}
+
+func NewRedisStoreWithClient(client redis.UniversalClient) *RedisStore {
+	return &RedisStore{
 		Options: &Options{
 			Path:   "/",
 			MaxAge: 86400 * 30,
 		},
 		SessionIDLength: 64,
 		Prefix:          "",
-		Client: redis.NewClient(&redis.Options{
-			Addr:     "localhost:6379",
-			Password: "", // no password set
-			DB:       0,  // use default DB
-		}),
-		Serializer: GobSerializer{},
+		Client:          client,
+		Serializer:      GobSerializer{},
 	}
-	return s
 }
 
 func (s *RedisStore) SetSerializer(sessionSerializer SessionSerializer) {
@@ -130,27 +135,16 @@ func (s *RedisStore) New(r *http.Request, cookieName string) (*Session, error) {
 			} else {
 				err = _err
 			}
-			newid := s.generateID()
+			newid := generateID(s.SessionIDLength)
 			session.ID = newid
 			session.IsNew = true
 		}
 	} else {
-		newid := s.generateID()
+		newid := generateID(s.SessionIDLength)
 		session.ID = newid
 		session.IsNew = true
 	}
 	return session, err
-}
-
-func (s *RedisStore) generateID() string {
-	if s.SessionIDLength < 32 {
-		s.SessionIDLength = 32
-	}
-	b := make([]rune, s.SessionIDLength)
-	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
-	}
-	return string(b)
 }
 
 // Save adds a single session to the response.

@@ -2,7 +2,6 @@ package cartsess
 
 import (
 	"log"
-	"math/rand"
 	"net/http"
 	"strconv"
 	"sync"
@@ -19,10 +18,6 @@ type MemoryStore struct {
 }
 
 var _ Store = &MemoryStore{}
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
 
 func NewMemoryStore() *MemoryStore {
 	s := &MemoryStore{
@@ -61,7 +56,7 @@ func (s *MemoryStore) New(r *http.Request, cookieName string) (*Session, error) 
 			session.Values = s.value[sid.Value].(map[string]interface{})
 		}
 	} else {
-		newid := s.generateID()
+		newid := generateID(s.SessionIDLength)
 		session.ID = newid
 		session.IsNew = true
 	}
@@ -96,19 +91,6 @@ func (s *MemoryStore) Destroy(r *http.Request, w http.ResponseWriter, session *S
 	}
 	http.SetCookie(w, NewCookie(session.CookieName(), "", opt))
 	return nil
-}
-
-var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-
-func (s *MemoryStore) generateID() string {
-	if s.SessionIDLength < 32 {
-		s.SessionIDLength = 32
-	}
-	b := make([]rune, s.SessionIDLength)
-	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
-	}
-	return string(b)
 }
 
 func (s *MemoryStore) innerGC() {
